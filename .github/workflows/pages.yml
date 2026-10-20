@@ -39,6 +39,18 @@ jobs:
           test -s dist/vendor/draco/draco_decoder.wasm
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Version browser assets
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          let html = readFileSync('dist/index.html', 'utf8');
+          for (const file of ['app.js', 'design.css']) {
+            const version = createHash('sha256').update(readFileSync(`dist/${file}`)).digest('hex').slice(0, 12);
+            html = html.replaceAll(`"${file}"`, `"${file}?v=${version}"`);
+          }
+          writeFileSync('dist/index.html', html);
+          NODE
       - name: Upload website
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
