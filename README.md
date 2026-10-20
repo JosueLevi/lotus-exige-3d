@@ -53,6 +53,14 @@ Publica el **contenido de `dist/`** en un servidor estático con HTTPS. Mantén 
 
 La configuración de la publicación en Sites se administra por separado y no se incluye en este repositorio.
 
+### GitHub Pages
+
+El flujo `.github/workflows/pages.yml` publica únicamente `dist/`, sin instalar dependencias ni ejecutar un build. Comprueba el JavaScript y los assets principales antes de desplegar.
+
+Con Pages habilitado en el repositorio y GitHub Actions como origen, los cambios en `dist/` de la rama `main` se publican automáticamente. También puede ejecutarse manualmente desde **Actions → Publish GitHub Pages → Run workflow**.
+
+La dirección prevista es **https://josuelevi.github.io/lotus-exige-3d/**. El resultado de cada despliegue aparece en el entorno `github-pages`.
+
 ## Revisión local
 
 El servidor incluye rutas que no se publican dentro de `dist/`:
