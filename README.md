@@ -59,7 +59,7 @@ El flujo `.github/workflows/pages.yml` publica únicamente `dist/`, sin instalar
 
 Con Pages habilitado en el repositorio y GitHub Actions como origen, los cambios en `dist/` de la rama `main` se publican automáticamente. También puede ejecutarse manualmente desde **Actions → Publish GitHub Pages → Run workflow**.
 
-La dirección prevista es **https://josuelevi.github.io/lotus-exige-3d/**. El resultado de cada despliegue aparece en el entorno `github-pages`.
+La web está publicada en **https://josuelevi.github.io/lotus-exige-3d/**. El resultado de cada despliegue aparece en el entorno `github-pages`.
 
 ## Revisión local
 

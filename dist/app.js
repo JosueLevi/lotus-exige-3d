@@ -509,7 +509,8 @@ async function init() {
   const draco = new DRACOLoader(); draco.setDecoderPath('./vendor/draco/');
   const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
   const gltf = await loader.loadAsync('./assets/lotus-exige-240.glb', e => {
-    const percent = e.total ? Math.round(e.loaded / e.total * 95) : 45;
+    // A CDN may report a compressed length while progress counts decoded bytes.
+    const percent = e.total ? Math.min(95, Math.max(0, Math.round(e.loaded / e.total * 95))) : 45;
     $('#load-bar').style.width = `${percent}%`; $('#load-label').textContent = `${percent}% · Cargando modelo 3D`;
   });
   model = gltf.scene;
