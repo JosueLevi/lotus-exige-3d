@@ -1,0 +1,26 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Render del modelo · poster</title>
+<style>body{margin:0;background:#f1f0e9;color:#151b18;font:16px sans-serif}canvas{width:100%;max-width:1000px}p{padding:20px}</style>
+<script type="importmap">{"imports":{"three":"/vendor/three.module.js","three/addons/":"/vendor/addons/"}}</script>
+<p id="status">Renderizando el modelo original…</p><script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});
+renderer.setSize(1400,1000);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
+document.body.append(renderer.domElement);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1.4,.1,150);
+const room=new RoomEnvironment(),pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(room,.04).texture;scene.environmentIntensity=.7;room.dispose();pmrem.dispose();
+scene.add(new THREE.HemisphereLight(0xf0f2eb,0x28342b,1.1));
+for(const [color,intensity,pos] of [[0xf0f2eb,2.2,[3,6,4]],[0xe4dcc8,1.3,[-4,3,-2]],[0xc9d7c8,1.15,[1,2,-5]]]){let l=new THREE.DirectionalLight(color,intensity);l.position.set(...pos);scene.add(l);}
+const draco=new DRACOLoader().setDecoderPath('/vendor/draco/');const loader=new GLTFLoader().setDRACOLoader(draco);
+try{
+const gltf=await loader.loadAsync('/assets/lotus-exige-240.glb');const model=gltf.scene,bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3());
+model.position.set(-center.x,-bounds.min.y,-center.z);
+model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(m.name==='CAR_chassis.5')m.roughness=.22;if(m.name==='CAR_RIM.3')m.roughness=.32;if(m.emissiveIntensity>1.5)m.emissiveIntensity=1.5;}});
+scene.add(model);camera.position.set(Math.sin(.72)*Math.sin(1.31)*6.55,Math.cos(1.31)*6.55+.53,Math.cos(.72)*Math.sin(1.31)*6.55);camera.lookAt(0,.53,0);
+renderer.render(scene,camera);await new Promise(resolve=>requestAnimationFrame(resolve));renderer.render(scene,camera);
+const blob=await new Promise(resolve=>renderer.domElement.toBlob(resolve,'image/png'));
+const result=await fetch('/__qa/save-poster',{method:'POST',body:blob});document.querySelector('#status').textContent=await result.text();draco.dispose();
+}catch(e){document.querySelector('#status').textContent=String(e);}
+</script></html>

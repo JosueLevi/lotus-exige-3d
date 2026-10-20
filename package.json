@@ -1,0 +1,12 @@
+{
+  "name": "lotus-exige-3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Experiencia de storytelling 3D del Lotus Exige 240 con Three.js.",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node --check dist/app.js"
+  },
+  "license": "UNLICENSED"
+}
