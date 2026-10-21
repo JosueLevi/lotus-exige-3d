@@ -1,8 +1,8 @@
 # Lotus Exige 240 · Puro instinto
 
-Una web de storytelling con un Lotus Exige 240 en 3D. El recorrido presenta su silueta, tomas de aire, alerón e interior y termina en un estudio nocturno interactivo.
+Una web de storytelling con un Lotus Exige 240 en 3D. El recorrido presenta su silueta, tomas de aire, alerón e interior y termina en un estudio claro interactivo.
 
-![Estudio nocturno del Exige](docs/preview.png)
+![Visor interactivo del Exige](docs/preview.png)
 
 ## Ejecutar en local
 
@@ -23,10 +23,11 @@ npm run check
 ## Qué incluye
 
 - Entrada del coche desde el borde de la pantalla, con ruedas animadas y frenado gradual.
-- Seis capítulos con cámara, fondos y textos ligados al scroll.
+- Seis capítulos con fondos claros, columnas alternas y transiciones de cámara y texto ligadas al scroll.
 - Visor con giro, vistas predefinidas, colores, apertura de puertas y zoom.
 - Puntos interactivos para descubrir las tomas de aire, el alerón y el habitáculo.
-- Estudio nocturno con luz suave, halo rojo, reflejo tenue y controles de cristal oscuro.
+- Estudio claro con títulos rojos, sombras suaves, reflejo tenue y controles alineados.
+- Menú de capítulos compacto y puntos de detalle anclados al coche, con etiquetas que evitan el panel del visor.
 - Diseño adaptable, navegación por teclado, movimiento reducido e imagen alternativa si falla el 3D.
 - Assets, tipografías, Three.js y decodificador Draco alojados localmente.
 
@@ -42,7 +43,7 @@ dist/
 scripts/
   serve.mjs        Servidor local y rutas de revisión
 docs/
-  preview.png      Captura del estudio nocturno
+  preview.png      Captura del visor interactivo
 ```
 
 El proyecto usa HTML, CSS y JavaScript con módulos ES y un import map. No necesita React, Next.js ni un backend.
