@@ -166,6 +166,7 @@ html[data-page="loading"] #loader,html[data-page="revealing"] #loader{display:gr
 html[data-page="revealing"] #loader{pointer-events:none;animation:load-cover-out 1.2s both}
 .load-visual{position:absolute;inset:0;display:block;overflow:hidden}
 .load-word{font:900 italic clamp(72px,20vw,280px)/1 var(--display-font);letter-spacing:-.025em;transform-box:view-box;transform-origin:50% 50%}
+@media(max-width:800px){html{scrollbar-gutter:auto}.load-word{font-size:clamp(80px,26vw,160px)}}
 html[data-page="loading"] .load-cover{mask:none}
 html[data-page="revealing"] .load-word{animation:load-enter 1.2s cubic-bezier(.55,.05,.7,.4) both}
 html[data-page="revealing"] .load-ink{animation:load-enter 1.2s cubic-bezier(.55,.05,.7,.4) both,load-ink-out 1.2s linear both}
