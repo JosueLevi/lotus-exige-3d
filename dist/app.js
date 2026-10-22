@@ -18,7 +18,7 @@ const reflectionNodes = [], reflectionMaterials = [];
 const reflectionStrength = { value:0 };
 let storyProgress = 0, doorAmount = 0, doorRequested = false;
 let editorialBounds = null;
-let viewerActive = false, drawFrame, lastTime = 0;
+let viewerActive = false, drawFrame, lastTime = 0, pageRevealed = false, revealingPage = false;
 function requestRender() { if (ready && drawFrame && visible && !failed && !frame) frame = requestAnimationFrame(drawFrame); }
 const doorHinges = [];
 const sceneNames = ['Presentación', 'Silueta compacta', 'Tomas de aire', 'Alerón trasero', 'Habitáculo', 'A tu manera'];
@@ -33,13 +33,14 @@ function updateInteractionHint() {
 }
 touchQuery.addEventListener('change', updateInteractionHint);
 updateInteractionHint();
-const loadDone = () => $('#loader').classList.add('done');
+const loadDone = () => window.siteBoot.finish();
 function fail(error) {
-  failed = true; finishArrival(); loadDone(); $('#fallback').hidden = false; document.body.dataset.model = 'failed';
+  failed = true; finishArrival(); $('#fallback').hidden = false; document.body.dataset.model = 'failed';
   setInteraction(false); $('#toggle-interaction').disabled = true;
   $('#car-poster').removeAttribute('aria-hidden'); $('#car').setAttribute('aria-hidden', 'true');
   $('#viewer-help').textContent = 'Puedes seguir el recorrido. La vista 3D no está disponible por ahora.';
   $('#viewer-status').textContent = 'Mostrando una imagen'; setViewerAction('3D no disponible');
+  loadDone();
   console.error('La vista 3D no pudo iniciarse:', error);
 }
 $('#retry').addEventListener('click', () => location.reload());
@@ -62,6 +63,7 @@ motionQuery.addEventListener('change', e => { reduced = e.matches; updateMotion(
 updateMotion();
 
 function scrollState() {
+  if (document.body.classList.contains('static-preview')) return;
   const scroll = window.scrollY;
   let section = 0;
   while (section < chapters.length - 2 && scroll >= chapters[section + 1].offsetTop) section++;
@@ -540,9 +542,9 @@ async function init() {
   const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
   const gltf = await loader.loadAsync('./assets/lotus-exige-240.glb', e => {
     // A CDN may report a compressed length while progress counts decoded bytes.
-    const percent = e.total ? Math.min(95, Math.max(0, Math.round(e.loaded / e.total * 95))) : 45;
-    $('#load-bar').style.width = `${percent}%`; $('#load-label').textContent = `${percent}% · Cargando modelo 3D`;
+    if (e.total) window.siteBoot.progress(Math.min(85, Math.max(0, Math.round(e.loaded / e.total * 85))));
   });
+  if (failed || window.siteBoot.cancelled) { draco.dispose(); return; }
   model = gltf.scene;
   const bounds = new THREE.Box3().setFromObject(model), center = bounds.getCenter(new THREE.Vector3());
   model.position.x -= center.x; model.position.z -= center.z; model.position.y -= bounds.min.y;
@@ -576,22 +578,25 @@ async function init() {
   // Prepare shaders, textures and shadows before starting the visible clock.
   // Keep this warm-up render hidden, then clear it to prevent a parked-car flash.
   document.body.dataset.model = 'preparing';
-  $('#load-label').textContent = 'Preparando la vista 3D…';
+  window.siteBoot.progress(90, 'Ultimando los detalles…');
   scrollState(); Object.assign(current, targetPose());
   applyPose(current); updateScenery(current);
   // Include the reflection in warm-up without displaying it in other chapters.
   reflectionRig.visible = true; syncFloorReflection();
+  await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 1200))]);
+  if (failed || window.siteBoot.cancelled) { draco.dispose(); return; }
   await renderer.compileAsync(scene, camera);
+  if (failed || window.siteBoot.cancelled) { draco.dispose(); return; }
   renderer.render(scene, camera); renderer.clear();
   updateScenery(current);
   ready = true; scrollState();
-  $('#load-bar').style.width = '100%'; loadDone(); draco.dispose();
+  window.siteBoot.progress(98); draco.dispose();
   $('#car-poster').setAttribute('aria-hidden', 'true');
   lastTime = performance.now();
   drawFrame = function animate(time = performance.now()) {
     frame = 0;
     if (!visible || failed) return;
-    let moving = updateArrival(time);
+    let moving = pageRevealed ? updateArrival(time) : false;
     const easing = 1 - Math.exp(-Math.min(80, time - lastTime) / 95); lastTime = time;
     if (!controls.enabled) {
       const p = targetPose();
@@ -614,6 +619,16 @@ async function init() {
     syncFloorReflection();
     renderer.render(scene, camera);
     document.body.dataset.model = 'ready';
+    if (!revealingPage) {
+      revealingPage = true;
+      window.siteBoot.progress(100);
+      loadDone().then(() => {
+        pageRevealed = true;
+        arrivalLastTime = null;
+        lastTime = performance.now();
+        requestRender();
+      });
+    }
     updateHotspots();
     if (moving) requestRender();
   };
@@ -628,4 +643,5 @@ addEventListener('resize', () => {
 });
 document.addEventListener('visibilitychange', () => { visible = !document.hidden; arrivalLastTime = null; if (visible) requestRender(); });
 $('#car').addEventListener('webglcontextlost', e => { e.preventDefault(); cancelAnimationFrame(frame); fail('Se perdió el contexto WebGL.'); });
-init().catch(fail);
+window.siteBoot.onFailure(fail);
+if (!window.siteBoot.cancelled) init().catch(fail);

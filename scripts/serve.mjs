@@ -10,8 +10,16 @@ const server = http.createServer((req,res) => {
   if (pathname === '/__qa/poster') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(fs.readFileSync('scripts/poster.html')); return; }
   if (pathname === '/__qa/lotus') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(fs.readFileSync('scripts/lotus-inspect.html')); return; }
   if (pathname === '/__qa/no-webgl') {
-    const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace('<head>','<head><base href="/">').replace('<script type="module" src="app.js"></script>',`<script>const originalContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:originalContext.call(this,type,...args);};</script><script type="module" src="app.js"></script>`);
+    const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace('<head>','<head><base href="/">').replace(/<script type="module" src="app.js"[^>]*><\/script>/,`<script>const originalContext=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:originalContext.call(this,type,...args);};</script><script type="module" src="app.js" onerror="window.siteBoot.fallback()"></script>`);
     res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(html);return;
+  }
+  // Exercise the page cover independently of WebGL and module availability.
+  if (pathname === '/__qa/module-error' || pathname === '/__qa/load-timeout') {
+    let html = fs.readFileSync(path.join(root,'index.html'),'utf8').replace('<head>','<head><base href="/">');
+    html = pathname.endsWith('module-error')
+      ? html.replace('src="app.js" onerror=', 'src="missing-module.js" onerror=')
+      : html.replaceAll('20000', '1000');
+    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'}); res.end(html); return;
   }
   if (pathname === '/__qa/save-poster' && req.method === 'POST') {
     const chunks=[]; let size=0;

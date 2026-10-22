@@ -22,6 +22,7 @@ npm run check
 
 ## Qué incluye
 
+- Pantalla de carga general hasta preparar el primer fotograma 3D; la entrada del coche comienza después de abrir la página.
 - Entrada del coche desde el borde de la pantalla, con ruedas animadas y frenado gradual.
 - Seis capítulos con fondos claros, columnas alternas y transiciones de cámara y texto ligadas al scroll.
 - Visor con giro, vistas predefinidas, colores, apertura de puertas y zoom.
@@ -69,6 +70,8 @@ El servidor incluye rutas que no se publican dentro de `dist/`:
 - `/__qa/desktop?scene=explorar`: composición de escritorio.
 - `/__qa/mobile?scene=explorar`: composición móvil.
 - `/__qa/no-webgl`: alternativa cuando no está disponible WebGL.
+- `/__qa/module-error`: recuperación si no carga el módulo de la experiencia.
+- `/__qa/load-timeout`: recuperación con un límite de carga reducido para pruebas; combinar con `LOTUS_QA_DELAY_MS` al iniciar el servidor.
 - `/__qa/lotus`: inspección del modelo.
 - `/__qa/poster`: generación de la imagen alternativa.
 

@@ -3,6 +3,69 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#ffffff">
+  <style>html[data-page="loading"],html[data-page="revealing"]{overflow:hidden}html[data-page="loading"] #site-shell{visibility:hidden;opacity:0}html[data-page="loading"] #loader{position:fixed;inset:0;z-index:10000;background:#faf9f7}</style>
+  <script id="site-boot">
+  (() => {
+    const root = document.documentElement;
+    root.dataset.page = 'loading';
+    let finished = false, failureHandler, timer, complete;
+    const completion = new Promise(resolve => { complete = resolve; });
+    const shell = () => document.getElementById('site-shell');
+    function finish() {
+      if (finished) return completion;
+      finished = true;
+      clearTimeout(timer);
+      const overlay = document.getElementById('loader');
+      root.dataset.page = 'revealing';
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.inert = true;
+      const duration = matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced') ? 0 : 360;
+      setTimeout(() => {
+        overlay.hidden = true;
+        shell().inert = false;
+        shell().removeAttribute('aria-hidden');
+        root.dataset.page = 'ready';
+        complete();
+      }, duration);
+      return completion;
+    }
+    function fallback() {
+      if (finished) return;
+      window.siteBoot.cancelled = true;
+      if (failureHandler) { failureHandler(new Error('La carga del recorrido no terminó a tiempo.')); return; }
+      document.body.classList.add('static-preview');
+      document.body.dataset.model = 'failed';
+      document.querySelectorAll('.chapter').forEach(chapter => { chapter.inert = false; });
+      document.getElementById('car-poster').removeAttribute('aria-hidden');
+      document.getElementById('fallback').hidden = false;
+      document.getElementById('retry').addEventListener('click', () => location.reload());
+      document.getElementById('toggle-interaction').disabled = true;
+      finish();
+    }
+    let progress = 0;
+    window.siteBoot = {
+      cancelled:false, finish, fallback,
+      onFailure(handler) { failureHandler = handler; },
+      progress(value, label) {
+        progress = Math.max(progress, Math.min(100, value));
+        document.getElementById('load-bar').style.width = `${progress}%`;
+        if (label) document.getElementById('load-label').textContent = label;
+      }
+    };
+    const watch = () => {
+      if (document.hidden) { timer = setTimeout(watch, 20000); return; }
+      fallback();
+    };
+    timer = setTimeout(watch, 20000);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (root.dataset.page !== 'ready') {
+        shell().inert = true;
+        shell().setAttribute('aria-hidden', 'true');
+      }
+    }, {once:true});
+  })();
+  </script>
+
   <meta name="description" content="Descubre el Lotus Exige 240 en 3D: silueta baja, tomas de aire, alerón trasero y habitáculo de dos plazas. Una experiencia de diseño interactiva.">
   <title>LOTUS EXIGE 240 — Puro instinto</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ffffff'/%3E%3Cpath d='M30 24v52h42' fill='none' stroke='%23ff0e49' stroke-width='9'/%3E%3C/svg%3E">
@@ -13,6 +76,15 @@
   <noscript><style>#car-poster{opacity:1;visibility:visible}#loader{display:none}.copy{position:relative!important;opacity:1!important;visibility:visible!important}.chapter{min-height:80vh;padding:100px 8%}.explore-panel,footer{position:relative!important;opacity:1!important;visibility:visible!important}</style></noscript>
 </head>
 <body data-chapter="0" data-arrival="waiting">
+  <div id="loader" aria-label="Cargando el recorrido">
+    <div class="load-layout">
+      <div class="load-brand"><span class="brand-mark" aria-hidden="true">L/</span><span>LOTUS <small>EXIGE 240</small></span></div>
+      <p class="load-title" aria-hidden="true"><span>Puro</span><span>instinto.</span></p>
+      <div class="load-track" aria-hidden="true"><i id="load-bar"></i></div>
+      <p id="load-label" role="status" aria-live="polite">Preparando tu recorrido…</p>
+    </div>
+  </div>
+  <div id="site-shell">
   <a class="skip" href="#historia">Ir al recorrido</a>
   <header class="masthead">
     <a class="brand" href="#inicio" aria-label="Lotus Exige 240, inicio"><span class="brand-mark" aria-hidden="true">L/</span><b>LOTUS</b><span class="brand-model">EXIGE 240</span></a>
@@ -22,7 +94,6 @@
   <div class="chapter-word" aria-hidden="true">EXIGE</div>
   <img id="car-poster" src="assets/lotus-exige-poster.png" width="1400" height="1000" alt="Lotus Exige 240 blanco, visto de tres cuartos, con llantas negras y alerón trasero" fetchpriority="high">
   <div id="stage"><canvas id="car" tabindex="-1" role="img" aria-label="Vista 3D del Lotus Exige 240"></canvas><div id="orbit-surface" aria-hidden="true"></div></div>
-  <div id="loader" role="status"><div class="load-track"><i id="load-bar"></i></div><small id="load-label">Cargando el modelo 3D… Puedes seguir con el recorrido.</small></div>
   <div id="fallback" hidden><p>No pudimos mostrar el 3D.</p><span>Puedes seguir el recorrido con una imagen del modelo o volver a intentarlo.</span><button id="retry">Reintentar vista 3D</button></div>
   <main>
     <section id="inicio" class="chapter hero" aria-labelledby="hero-title"><div class="copy hero-copy"><p class="eyebrow">LOTUS EXIGE 240 / DISEÑO EN 3D</p><h1 id="hero-title"><span class="hero-name">EXIGE</span><span class="hero-edition">240</span></h1><div class="hero-side"><span class="mini-label">DISEÑO DEPORTIVO, AL DETALLE.</span><p>Perfil bajo.<br>Líneas marcadas.<br>Carácter propio.</p><button id="replay-arrival" class="replay-button" disabled>Repetir animación <span>↻</span></button></div><div class="hero-bottom"><div><p class="hero-statement">Puro instinto.</p><p class="hero-caption">Recorre su diseño.<br>Después, explóralo en 3D.</p></div><div class="hero-actions"><a class="primary-action" href="#historia">Ver el diseño <span>↓</span></a><span class="scroll-hint">DESLIZA PARA CONTINUAR</span></div></div></div></section>
@@ -54,6 +125,7 @@
   <div class="scene-index"><span id="scene-number">1</span><span>de 6</span><span aria-hidden="true">·</span><span id="scene-label">Presentación</span></div>
   <div class="progress-line" aria-hidden="true"><i id="progress"></i></div>
   <noscript><div class="noscript">Activa JavaScript para explorar el coche en 3D.</div></noscript>
-  <script type="module" src="app.js"></script>
+  </div>
+  <script type="module" src="app.js" onerror="window.siteBoot.fallback()"></script>
 </body>
 </html>
