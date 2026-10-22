@@ -33,7 +33,7 @@ function updateInteractionHint() {
 }
 touchQuery.addEventListener('change', updateInteractionHint);
 updateInteractionHint();
-const loadDone = () => window.siteBoot.finish();
+const loadDone = onEnter => window.siteBoot.finish(onEnter);
 function fail(error) {
   failed = true; finishArrival(); $('#fallback').hidden = false; document.body.dataset.model = 'failed';
   setInteraction(false); $('#toggle-interaction').disabled = true;
@@ -73,7 +73,6 @@ function scrollState() {
   const i = Math.round(storyProgress);
   if (arrivalActive && scroll > 20 && !arrivalSettle) {
     arrivalSettle = { elapsed:0, z:arrivalRig.position.z, yaw:arrivalRig.rotation.y, pitch:arrivalRig.rotation.x };
-    $('#skip-arrival').hidden = true;
   }
   if (i !== active) {
     if (viewerActive) setInteraction(false);
@@ -207,7 +206,6 @@ function startArrival() {
   previousArrivalZ = Infinity;
   arrivalRig.position.z = arrivalFromZ;
   document.body.dataset.arrival = 'running';
-  $('#skip-arrival').hidden = false;
   $('#replay-arrival').disabled = true;
   requestRender();
 }
@@ -216,7 +214,6 @@ function finishArrival() {
   if (arrivalRig) { arrivalRig.position.set(0,0,0); arrivalRig.rotation.set(0,0,0); }
   if (shadow) { shadow.position.z = 0; shadow.rotation.z = 0; }
   for (const h of wheelHinges) h.node.quaternion.copy(h.closed);
-  $('#skip-arrival').hidden = true;
   $('#replay-arrival').disabled = !ready || reduced || failed;
   $('#replay-arrival').setAttribute('aria-label', reduced ? 'Animación desactivada con movimiento reducido' : 'Repetir la animación de entrada del Exige');
   document.body.dataset.arrival = 'finished';
@@ -224,7 +221,6 @@ function finishArrival() {
   requestRender();
 }
 $('#replay-arrival').addEventListener('click', startArrival);
-$('#skip-arrival').addEventListener('click', () => { finishArrival(); $('#replay-arrival').focus(); });
 function updateArrival(time) {
   if (!arrivalActive) return false;
   // Count presented frames, so shader work, a slow frame or a hidden tab
@@ -622,7 +618,8 @@ async function init() {
     if (!revealingPage) {
       revealingPage = true;
       window.siteBoot.progress(100);
-      loadDone().then(() => {
+      loadDone(() => {
+        if (failed) return;
         pageRevealed = true;
         arrivalLastTime = null;
         lastTime = performance.now();

@@ -11,22 +11,29 @@
     let finished = false, failureHandler, timer, complete;
     const completion = new Promise(resolve => { complete = resolve; });
     const shell = () => document.getElementById('site-shell');
-    function finish() {
+    function finish(onEnter) {
       if (finished) return completion;
       finished = true;
       clearTimeout(timer);
       const overlay = document.getElementById('loader');
-      root.dataset.page = 'revealing';
-      overlay.setAttribute('aria-hidden', 'true');
-      overlay.inert = true;
-      const duration = matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced') ? 0 : 360;
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduced');
+      const duration = reduced || window.siteBoot.cancelled || document.body.dataset.model === 'failed' ? 0 : 1200;
+      // Reveal the prepared scene through the letters; overlap the car's arrival
+      // with the last part of the opening instead of waiting for the cover to end.
       setTimeout(() => {
-        overlay.hidden = true;
-        shell().inert = false;
-        shell().removeAttribute('aria-hidden');
-        root.dataset.page = 'ready';
-        complete();
-      }, duration);
+        root.dataset.reveal = duration ? 'portal' : 'instant';
+        root.dataset.page = 'revealing';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.inert = true;
+        setTimeout(() => { if (onEnter) onEnter(); }, duration * .6);
+        setTimeout(() => {
+          overlay.hidden = true;
+          shell().inert = false;
+          shell().removeAttribute('aria-hidden');
+          root.dataset.page = 'ready';
+          complete();
+        }, duration);
+      }, 0);
       return completion;
     }
     function fallback() {
@@ -42,13 +49,10 @@
       document.getElementById('toggle-interaction').disabled = true;
       finish();
     }
-    let progress = 0;
     window.siteBoot = {
       cancelled:false, finish, fallback,
       onFailure(handler) { failureHandler = handler; },
-      progress(value, label) {
-        progress = Math.max(progress, Math.min(100, value));
-        document.getElementById('load-bar').style.width = `${progress}%`;
+      progress(_value, label) {
         if (label) document.getElementById('load-label').textContent = label;
       }
     };
@@ -77,12 +81,17 @@
 </head>
 <body data-chapter="0" data-arrival="waiting">
   <div id="loader" aria-label="Cargando el recorrido">
-    <div class="load-layout">
-      <div class="load-brand"><span class="brand-mark" aria-hidden="true">L/</span><span>LOTUS <small>EXIGE 240</small></span></div>
-      <p class="load-title" aria-hidden="true"><span>Puro</span><span>instinto.</span></p>
-      <div class="load-track" aria-hidden="true"><i id="load-bar"></i></div>
-      <p id="load-label" role="status" aria-live="polite">Preparando tu recorrido…</p>
-    </div>
+    <svg class="load-visual" width="100%" height="100%" aria-hidden="true" focusable="false">
+      <defs>
+        <mask id="load-portal-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%" style="mask-type:luminance">
+          <rect width="100%" height="100%" fill="white"/>
+          <text class="load-word load-cutout" x="50%" y="50%" dy=".32em" text-anchor="middle" fill="black">LOTUS</text>
+        </mask>
+      </defs>
+      <rect class="load-cover" width="100%" height="100%" fill="#faf9f7" mask="url(#load-portal-mask)"/>
+      <text class="load-word load-ink" x="50%" y="50%" dy=".32em" text-anchor="middle" fill="#080808">LOTUS</text>
+    </svg>
+    <p id="load-label" role="status" aria-live="polite">Preparando tu recorrido…</p>
   </div>
   <div id="site-shell">
   <a class="skip" href="#historia">Ir al recorrido</a>
@@ -120,7 +129,6 @@
       <footer><span>EXIGE 240 / ESTUDIO INTERACTIVO</span><p>Concepto independiente. Colores ilustrativos. Modelo 3D: <a href="https://sketchfab.com/DavidAnd3D" target="_blank" rel="noopener noreferrer">David &amp; 3D</a>.</p><a href="#inicio">Volver al inicio ↑</a></footer>
     </section>
   </main>
-  <button id="skip-arrival" hidden>Saltar animación <span>→</span></button>
   <details id="chapters-menu"><summary><span>Capítulos</span><svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M5 6h14M5 12h14M5 18h14"/></svg></summary><nav class="chapter-nav" aria-label="Capítulos"><div class="chapter-nav-heading"><span>EL RECORRIDO</span><small>06 CAPÍTULOS</small></div><a class="active" href="#inicio" aria-current="step"><small>01</small><span>Presentación</span><i></i></a><a href="#historia"><small>02</small><span>Silueta compacta</span><i></i></a><a href="#diseno"><small>03</small><span>Tomas de aire</span><i></i></a><a href="#perspectiva"><small>04</small><span>Alerón trasero</span><i></i></a><a href="#firma"><small>05</small><span>Habitáculo</span><i></i></a><a href="#explorar"><small>06</small><span>A tu manera</span><i></i></a><button id="motion" class="motion-button" aria-pressed="false" aria-label="Reducir animaciones"><span>Reducir animaciones</span><i class="motion-switch" aria-hidden="true"></i></button></nav></details>
   <div class="scene-index"><span id="scene-number">1</span><span>de 6</span><span aria-hidden="true">·</span><span id="scene-label">Presentación</span></div>
   <div class="progress-line" aria-hidden="true"><i id="progress"></i></div>

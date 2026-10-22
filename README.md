@@ -22,7 +22,7 @@ npm run check
 
 ## Qué incluye
 
-- Pantalla de carga general hasta preparar el primer fotograma 3D; la entrada del coche comienza después de abrir la página.
+- Pantalla de carga con «LOTUS» negro en la tipografía del título, sin parpadeo. Al preparar el primer fotograma 3D, un zoom de 1,2 segundos revela la escena a través de las letras y se solapa con la entrada del coche. Con movimiento reducido o si falla la carga se abre directamente.
 - Entrada del coche desde el borde de la pantalla, con ruedas animadas y frenado gradual.
 - Seis capítulos con fondos claros, columnas alternas y transiciones de cámara y texto ligadas al scroll.
 - Visor con giro, vistas predefinidas, colores, apertura de puertas y zoom.
